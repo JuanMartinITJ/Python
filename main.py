@@ -1,6 +1,3 @@
-#from http import cookies
-#from msilib.schema import ServiceControl
-#from ssl import Options
 from flask import Flask, request, redirect, render_template_string
 from selenium import webdriver
 from selenium.webdriver.common.by import By 
@@ -8,10 +5,14 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait 
 from selenium.webdriver.support import expected_conditions as EC  
 
+from dotenv import load_dotenv
+import os
 
 
 #from flask_cors import CORS, cross_origin
 #from webdriver_manager.chrome import ChromeDriverManager  # Ayuda a gestionar el controlador
+
+load_dotenv()
 
 app = Flask(__name__)
 
@@ -129,18 +130,29 @@ body, html {
 </html>
     '''
 
-@app.route('/redirigir', methods=['POST'])
+#@app.route('/redirigir', method=['POST'])
+@app.route('/redirigir')
 def redirigir():
-    nombre = request.form['nombre']
-    id_estudiante = request.form['id']
+    options = webdriver.EdgeOptions()
+    driver = webdriver.Edge(options=options)
+
+    form_url = os.getenv('FORM_URL')
+    driver.get(form_url)
+
+    # Obtener las credenciales desde las variables de entorno
+    selenium_username = os.getenv('SELENIUM_USERNAME')
+    selenium_password = os.getenv('SELENIUM_PASSWORD')
+
+    #nombre = request.form['nombre']
+    #id_estudiante = request.form['id']
 
   # Configurar Selenium para iniciar sesión en modo headless
     #options = Options()
     #options.headless = True
     # Configuracion privada (modificar después)
     #driver = webdriver.Chrome(service=ServiceControl(ChromeDriverManager().install()), options=options)
-    driver = webdriver.Edge()
-    driver.get("https://ventanillaingresospropiosvdos-qa.michoacan.gob.mx/")
+    #driver = webdriver.Edge()
+    #driver.get("https://ventanillaingresospropiosvdos-qa.michoacan.gob.mx/")
     
     #try:
 
@@ -153,18 +165,21 @@ def redirigir():
     driver.implicitly_wait(5)
     username_field = driver.find_element(By.ID, "usuario")
     password_field = driver.find_element(By.ID, "password")
-    username_field.send_keys("IP_UCEMICH_VENTANILLA") #IPP_UCEMICH_VENTANILLA
-    password_field.send_keys("y0e4C5.3*") #99FO#Mm*
+    username_field.send_keys(selenium_username)
+    password_field.send_keys(selenium_password)
     password_field.send_keys(Keys.RETURN)
+    #username_field.send_keys("IP_UCEMICH_VENTANILLA") #IPP_UCEMICH_VENTANILLA
+    #password_field.send_keys("y0e4C5.3*") #99FO#Mm*
+    #password_field.send_keys(Keys.RETURN)
 
     # Esperar la redirección después del login
     WebDriverWait(driver, 10).until(
-    EC.presence_of_element_located((By.ID, "#"))
+    #EC.presence_of_element_located((By.ID, "#"))
     )
 
         # Extraer cookies de sesión
-        #cookies = driver.get_cookies()
-        #driver.quit()
+        # cookies = driver.get_cookies()
+        # driver.quit()
 
     html_content = f"""
         <html>
@@ -187,4 +202,5 @@ def redirigir():
         return f"Error: {str(e)}", 500 """ 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5200)
+    #app.run(debug=True)
+    debug=os.getenv('DEBUG') == 'True'
